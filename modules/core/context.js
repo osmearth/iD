@@ -43,6 +43,7 @@ import {
     utilRebind
 } from '../util';
 
+import Q from 'q';
 
 export var areaKeys = {};
 
@@ -51,7 +52,7 @@ export function setAreaKeys(value) {
 }
 
 
-export function coreContext() {
+export function coreContext(cb) {
     var context = {};
     context.version = '2.10.0';
 
@@ -498,11 +499,13 @@ export function coreContext() {
         }
     });
 
-    background.init();
-    features.init();
-    presets.init();
-    areaKeys = presets.areaKeys();
-
-
-    return utilRebind(context, dispatch, 'on');
+    var bInit = background.init();
+    var pInit = presets.init();
+    Q.all([bInit, pInit]).then(function(){
+        features.init();
+        areaKeys = presets.areaKeys();
+        cb(utilRebind(context, dispatch, 'on'));
+    }).catch(function(err) {
+        console.error(err);
+    });
 }

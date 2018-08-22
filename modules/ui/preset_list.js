@@ -137,7 +137,13 @@ export function uiPresetList(context) {
 
 
     function drawList(list, presets) {
-        var collection = presets.collection.map(function(preset) {
+
+        // filter possible bad presets from custom configs 
+        var collectionsFilter = presets.collection.filter(function(preset) {
+            return preset;
+        });
+
+        var collection = collectionsFilter.map(function(preset) {
             return preset.members ? CategoryItem(preset) : PresetItem(preset);
         });
 

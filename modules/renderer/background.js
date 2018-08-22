@@ -15,6 +15,7 @@ import { utilQsString, utilStringQs } from '../util';
 import { utilDetect } from '../util/detect';
 import { utilRebind } from '../util/rebind';
 
+import Q from 'q';
 
 export function rendererBackground(context) {
     var dispatch = d3_dispatch('change');
@@ -366,128 +367,131 @@ export function rendererBackground(context) {
         return background;
     };
 
-
-    background.init = function() {
-        function parseMap(qmap) {
-            if (!qmap) return false;
-            var args = qmap.split('/').map(Number);
-            if (args.length < 3 || args.some(isNaN)) return false;
-            return geoExtent([args[2], args[1]]);
-        }
-
-        var q = utilStringQs(window.location.hash.substring(1));
-        var requested = q.background || q.layer;
-        var extent = parseMap(q.map);
-        var first;
-        var best;
-
-
-        data.imagery = data.imagery || [];
-        data.imagery.features = {};
-
-        // build efficient index and querying for data.imagery
-        var world = [[[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]];
-        var features = data.imagery.map(function(source) {
-            var feature = {
-                type: 'Feature',
-                id: source.id,
-                properties: _omit(source, ['polygon']),
-                geometry: {
-                    type: 'MultiPolygon',
-                    coordinates: [ source.polygon || world ]
-                }
-            };
-            data.imagery.features[source.id] = feature;
-            return feature;
-        });
-        data.imagery.query = whichPolygon({
-            type: 'FeatureCollection',
-            features: features
-        });
-
-
-        // Add all the available imagery sources
-        _backgroundSources = data.imagery.map(function(source) {
-            if (source.type === 'bing') {
-                return rendererBackgroundSource.Bing(source, dispatch);
-            } else if (/^EsriWorldImagery/.test(source.id)) {
-                return rendererBackgroundSource.Esri(source);
-            } else {
-                return rendererBackgroundSource(source);
+   
+        
+    background.init = function () {
+        return Q.when(data.imagery, function (imagery) {
+            data.imagery = imagery;
+            function parseMap(qmap) {
+                if (!qmap) return false;
+                var args = qmap.split('/').map(Number);
+                if (args.length < 3 || args.some(isNaN)) return false;
+                return geoExtent([args[2], args[1]]);
             }
-        });
 
-        first = _backgroundSources.length && _backgroundSources[0];
-
-        // Add 'None'
-        _backgroundSources.unshift(rendererBackgroundSource.None());
-
-        // Add 'Custom'
-        var template = context.storage('background-custom-template') || '';
-        var custom = rendererBackgroundSource.Custom(template);
-        _backgroundSources.unshift(custom);
+            var q = utilStringQs(window.location.hash.substring(1));
+            var requested = q.background || q.layer;
+            var extent = parseMap(q.map);
+            var first;
+            var best;
 
 
-        // Decide which background layer to display
-        if (!requested && extent) {
-            best = _find(this.sources(extent), function(s) { return s.best(); });
-        }
-        if (requested && requested.indexOf('custom:') === 0) {
-            template = requested.replace(/^custom:/, '');
-            background.baseLayerSource(custom.template(template));
-            context.storage('background-custom-template', template);
-        } else {
-            background.baseLayerSource(
-                background.findSource(requested) ||
-                best ||
-                background.findSource(context.storage('background-last-used')) ||
-                background.findSource('Bing') ||
-                first ||
-                background.findSource('none')
-            );
-        }
+            data.imagery = data.imagery || [];
+            data.imagery.features = {};
 
-        var locator = _find(_backgroundSources, function(d) {
-            return d.overlay && d.default;
-        });
-
-        if (locator) {
-            background.toggleOverlayLayer(locator);
-        }
-
-        var overlays = (q.overlays || '').split(',');
-        overlays.forEach(function(overlay) {
-            overlay = background.findSource(overlay);
-            if (overlay) {
-                background.toggleOverlayLayer(overlay);
-            }
-        });
-
-        if (q.gpx) {
-            var gpx = context.layers().layer('gpx');
-            if (gpx) {
-                gpx.url(q.gpx);
-            }
-        }
-
-        if (q.mvt) {
-            var mvt = context.layers().layer('mvt');
-            if (mvt) {
-                mvt.url(q.mvt);
-            }
-        }
-
-        if (q.offset) {
-            var offset = q.offset.replace(/;/g, ',').split(',').map(function(n) {
-                return !isNaN(n) && n;
+            // build efficient index and querying for data.imagery
+            var world = [[[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]];
+            var features = data.imagery.map(function(source) {
+                var feature = {
+                    type: 'Feature',
+                    id: source.id,
+                    properties: _omit(source, ['polygon']),
+                    geometry: {
+                        type: 'MultiPolygon',
+                        coordinates: [ source.polygon || world ]
+                    }
+                };
+                data.imagery.features[source.id] = feature;
+                return feature;
+            });
+            data.imagery.query = whichPolygon({
+                type: 'FeatureCollection',
+                features: features
             });
 
-            if (offset.length === 2) {
-                background.offset(geoMetersToOffset(offset));
-            }
-        }
-    };
 
+            // Add all the available imagery sources
+            _backgroundSources = data.imagery.map(function(source) {
+                if (source.type === 'bing') {
+                    return rendererBackgroundSource.Bing(source, dispatch);
+                } else if (/^EsriWorldImagery/.test(source.id)) {
+                    return rendererBackgroundSource.Esri(source);
+                } else {
+                    return rendererBackgroundSource(source);
+                }
+            });
+
+            first = _backgroundSources.length && _backgroundSources[0];
+
+            // Add 'None'
+            _backgroundSources.unshift(rendererBackgroundSource.None());
+
+            // Add 'Custom'
+            var template = context.storage('background-custom-template') || '';
+            var custom = rendererBackgroundSource.Custom(template);
+            _backgroundSources.unshift(custom);
+
+
+            // Decide which background layer to display
+            if (!requested && extent) {
+                best = _find(this.sources(extent), function(s) { return s.best(); });
+            }
+            if (requested && requested.indexOf('custom:') === 0) {
+                template = requested.replace(/^custom:/, '');
+                background.baseLayerSource(custom.template(template));
+                context.storage('background-custom-template', template);
+            } else {
+                background.baseLayerSource(
+                    background.findSource(requested) ||
+                    best ||
+                    background.findSource(context.storage('background-last-used')) ||
+                    background.findSource('Bing') ||
+                    first ||
+                    background.findSource('none')
+                );
+            }
+
+            var locator = _find(_backgroundSources, function(d) {
+                return d.overlay && d.default;
+            });
+
+            if (locator) {
+                background.toggleOverlayLayer(locator);
+            }
+
+            var overlays = (q.overlays || '').split(',');
+            overlays.forEach(function(overlay) {
+                overlay = background.findSource(overlay);
+                if (overlay) {
+                    background.toggleOverlayLayer(overlay);
+                }
+            });
+
+            if (q.gpx) {
+                var gpx = context.layers().layer('gpx');
+                if (gpx) {
+                    gpx.url(q.gpx);
+                }
+            }
+
+            if (q.mvt) {
+                var mvt = context.layers().layer('mvt');
+                if (mvt) {
+                    mvt.url(q.mvt);
+                }
+            }
+
+            if (q.offset) {
+                var offset = q.offset.replace(/;/g, ',').split(',').map(function(n) {
+                    return !isNaN(n) && n;
+                });
+
+                if (offset.length === 2) {
+                    background.offset(geoMetersToOffset(offset));
+                }
+            }
+    });
+    };
 
     return utilRebind(background, dispatch, 'on');
 }

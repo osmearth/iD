@@ -2,6 +2,7 @@ import _bind from 'lodash-es/bind';
 import _forEach from 'lodash-es/forEach';
 import _reject from 'lodash-es/reject';
 import _uniq from 'lodash-es/uniq';
+import Q from 'q';
 
 import { data } from '../../data/index';
 import { presetCategory } from './category';
@@ -120,59 +121,61 @@ export function presetIndex() {
 
 
     all.init = function() {
-        var d = data.presets;
+        return Q.when(data.presets, function (presets) {
+            var d =presets;
 
-        all.collection = [];
-        _recent.collection = [];
-        _fields = {};
-        _universal = [];
-        _index = { point: {}, vertex: {}, line: {}, area: {}, relation: {} };
+            all.collection = [];
+            _recent.collection = [];
+            _fields = {};
+            _universal = [];
+            _index = { point: {}, vertex: {}, line: {}, area: {}, relation: {} };
 
-        if (d.fields) {
-            _forEach(d.fields, function(d, id) {
-                _fields[id] = presetField(id, d);
-                if (d.universal) {
-                    _universal.push(_fields[id]);
-                }
-            });
-        }
+            if (d.fields) {
+                _forEach(d.fields, function(d, id) {
+                    _fields[id] = presetField(id, d);
+                    if (d.universal) {
+                        _universal.push(_fields[id]);
+                    }
+                });
+            }
 
-        if (d.presets) {
-            _forEach(d.presets, function(d, id) {
-                all.collection.push(presetPreset(id, d, _fields));
-            });
-        }
+            if (d.presets) {
+                _forEach(d.presets, function(d, id) {
+                    all.collection.push(presetPreset(id, d, _fields));
+                });
+            }
 
-        if (d.categories) {
-            _forEach(d.categories, function(d, id) {
-                all.collection.push(presetCategory(id, d, all));
-            });
-        }
+            if (d.categories) {
+                _forEach(d.categories, function(d, id) {
+                    all.collection.push(presetCategory(id, d, all));
+                });
+            }
 
-        if (d.defaults) {
-            var getItem = _bind(all.item, all);
-            _defaults = {
-                area: presetCollection(d.defaults.area.map(getItem)),
-                line: presetCollection(d.defaults.line.map(getItem)),
-                point: presetCollection(d.defaults.point.map(getItem)),
-                vertex: presetCollection(d.defaults.vertex.map(getItem)),
-                relation: presetCollection(d.defaults.relation.map(getItem))
-            };
-        }
+            if (d.defaults) {
+                var getItem = _bind(all.item, all);
+                _defaults = {
+                    area: presetCollection(d.defaults.area.map(getItem)),
+                    line: presetCollection(d.defaults.line.map(getItem)),
+                    point: presetCollection(d.defaults.point.map(getItem)),
+                    vertex: presetCollection(d.defaults.vertex.map(getItem)),
+                    relation: presetCollection(d.defaults.relation.map(getItem))
+                };
+            }
 
-        for (var i = 0; i < all.collection.length; i++) {
-            var preset = all.collection[i];
-            var geometry = preset.geometry;
+            for (var i = 0; i < all.collection.length; i++) {
+                var preset = all.collection[i];
+                var geometry = preset.geometry;
 
-            for (var j = 0; j < geometry.length; j++) {
-                var g = _index[geometry[j]];
-                for (var k in preset.tags) {
-                    (g[k] = g[k] || []).push(preset);
+                for (var j = 0; j < geometry.length; j++) {
+                    var g = _index[geometry[j]];
+                    for (var k in preset.tags) {
+                        (g[k] = g[k] || []).push(preset);
+                    }
                 }
             }
-        }
 
-        return all;
+            return all;
+        });
     };
 
     all.field = function(id) {

@@ -28,6 +28,12 @@ import { fields } from './presets/fields.json';
 import { geoArea as d3_geoArea } from 'd3-geo';
 import whichPolygon from 'which-polygon';
 
+import {
+    utilStringQs
+} from '../modules/util';
+import { request as d3_request } from 'd3-request';
+
+import Q from 'q';
 
 // index the osm-community-index
 var ociFeatureCollection = _values(ociFeatures).map(function(feature) {
@@ -41,6 +47,55 @@ var ociFeatureCollection = _values(ociFeatures).map(function(feature) {
 });
 
 
+// load custom config
+var query = utilStringQs(window.location.hash.substring(1));
+
+function getCustomConfig (param) {
+    
+    if (query.hasOwnProperty(param)) {
+        var deferred = Q.defer();
+        console.log('CUSTOM CONFIG: ' + param + ' - ' + query[param]);
+        d3_request(query[param])
+        .mimeType('application/json')
+        .response(function(xhr) { return JSON.parse(xhr.responseText); })
+        .get(function(err, data) {
+            if (err) {
+                console.error(err);
+                deferred.reject(err);
+            } else {
+                if (param === 'imagery_config') {
+                    if (data.dataImagery && Array.isArray(data.dataImagery)) {
+                        deferred.resolve(data.dataImagery);
+                    } else {
+                        deferred.reject(new Error('Invalid Custom Imagery Config'));
+                    }
+                } else if (param === 'presets_config') {
+                    if (data.presets) {
+
+                        var customPresets = {
+                            presets: data.presets,
+                            defaults: data.default || defaults,
+                            categories: data.categories || categories,
+                            fields: data.fields || fields
+                        }
+                        deferred.resolve(customPresets);
+                    } else {
+                        deferred.reject(new Error('Invalid Custom Preset Config'));
+                    }
+                }
+            }
+        });
+        return deferred.promise;
+    }
+}
+
+var presetsLocal = {
+    presets: presets,
+    defaults: defaults,
+    categories: categories,
+    fields: fields
+};
+
 export var data = {
     community: {
         features: ociFeatures,
@@ -50,11 +105,6 @@ export var data = {
             features: ociFeatureCollection
         })
     },
-    imagery: dataImagery,  //legacy
-    presets: {
-        presets: presets,
-        defaults: defaults,
-        categories: categories,
-        fields: fields
-    }
+    imagery: query.hasOwnProperty('imagery_config') ? getCustomConfig('imagery_config') : dataImagery,  //legacy
+    presets: query.hasOwnProperty('presets_config') ? getCustomConfig('presets_config') : presetsLocal
 };
