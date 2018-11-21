@@ -4,7 +4,7 @@ import { dispatch as d3_dispatch } from 'd3-dispatch';
 import { select as d3_select } from 'd3-selection';
 
 import { t } from '../util/locale';
-import { data } from '../../data';
+import { getData } from '../../data';
 import { svgIcon } from '../svg';
 import { uiDisclosure } from '../ui';
 import { utilDetect } from '../util/detect';
@@ -126,7 +126,7 @@ export function uiSuccess(context) {
             .append('div')
             .text(t('success.changeset_id', { changeset_id: _changeset.id }));
 
-
+        var data = getData();
         // Gather community polygon IDs intersecting the map..
         var matchFeatures = data.community.query(context.map().center(), true) || [];
         var matchIDs = matchFeatures.map(function(feature) { return feature.id; });

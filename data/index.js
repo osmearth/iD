@@ -40,21 +40,23 @@ var ociFeatureCollection = _values(ociFeatures).map(function(feature) {
     return feature;
 });
 
-
-export var data = {
-    community: {
-        features: ociFeatures,
-        resources: ociResources,
-        query: whichPolygon({
-            type: 'FeatureCollection',
-            features: ociFeatureCollection
-        })
-    },
-    imagery: dataImagery,  //legacy
-    presets: {
-        presets: presets,
-        defaults: defaults,
-        categories: categories,
-        fields: fields
-    }
-};
+export function getData() {
+    if (typeof ID_CONFIG === 'undefined') ID_CONFIG = {}
+    return {
+        community: {
+            features: ociFeatures,
+            resources: ociResources,
+            query: whichPolygon({
+                type: 'FeatureCollection',
+                features: ociFeatureCollection
+            })
+        },
+        imagery: ID_CONFIG.imagery || dataImagery,  //legacy
+        presets: {
+            presets: ID_CONFIG.presets || presets,
+            defaults: ID_CONFIG.defaults || defaults,
+            categories: ID_CONFIG.categories || categories,
+            fields: ID_CONFIG.fields || fields
+        }
+    };
+}

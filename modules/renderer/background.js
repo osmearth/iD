@@ -6,7 +6,7 @@ import { select as d3_select } from 'd3-selection';
 
 import whichPolygon from 'which-polygon';
 
-import { data } from '../../data';
+import { getData } from '../../data';
 import { geoExtent, geoMetersToOffset, geoOffsetToMeters} from '../geo';
 import { rendererBackgroundSource } from './background_source';
 import { rendererTileLayer } from './tile_layer';
@@ -200,6 +200,7 @@ export function rendererBackground(context) {
 
 
     background.sources = function(extent) {
+        var data = getData();
         if (!data.imagery || !data.imagery.query) return [];   // called before init()?
 
         var matchIDs = {};
@@ -369,7 +370,7 @@ export function rendererBackground(context) {
         var first;
         var best;
 
-
+        var data = getData();
         data.imagery = data.imagery || [];
         data.imagery.features = {};
 
