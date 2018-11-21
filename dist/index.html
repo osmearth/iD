@@ -47,6 +47,10 @@
                         id.features().disable('boundaries');
                     }
 
+                    if (q.hasOwnProperty('minEditableZoom')) {
+                        id.minEditableZoom(q.minEditableZoom)
+                    }
+
                     id.ui()(document.getElementById('id-container'), function() {
                         id.container().select('#about-list')
                             .insert('li', '.user-list')
