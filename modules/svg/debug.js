@@ -2,7 +2,7 @@ import _values from 'lodash-es/values';
 
 import { select as d3_select } from 'd3-selection';
 
-import { data, dataImperial, dataDriveLeft } from '../../data';
+import { getData, dataImperial, dataDriveLeft } from '../../data';
 import { svgPath } from './index';
 
 
@@ -79,6 +79,7 @@ export function svgDebug(projection, context) {
 
 
         var extent = context.map().extent();
+        var data = getData();
         var matchImagery = (showsImagery && data.imagery.query.bbox(extent.rectangle(), true)) || [];
         var features = matchImagery.map(function(d) { return data.imagery.features[d.id]; });
 

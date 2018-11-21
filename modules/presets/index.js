@@ -3,7 +3,7 @@ import _forEach from 'lodash-es/forEach';
 import _reject from 'lodash-es/reject';
 import _uniq from 'lodash-es/uniq';
 
-import { data } from '../../data/index';
+import { getData } from '../../data/index';
 import { presetCategory } from './category';
 import { presetCollection } from './collection';
 import { presetField } from './field';
@@ -122,7 +122,7 @@ export function presetIndex() {
 
 
     all.init = function() {
-        var d = data.presets;
+        var d = getData().presets;
 
         all.collection = [];
         _recent.collection = [];
