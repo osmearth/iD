@@ -41,6 +41,14 @@ in the hash portion of the URL:
 * __`rtl=true`__ - Force iD into right-to-left mode (useful for testing).
 * __`walkthrough=true`__ - Start the walkthrough automatically
 
+##### OSM Earth Additions
+* __`minEditableZoom`__ - Adjust the zoom level where iD starts editing. <br />
+    _Default:_ 16  <br />
+    _Recommended:_ 14 or 12 max  <br />
+    ⚠️Warning⚠️ only use in lower density areas, otherwise you risk data not loading from OSM and extremely slow/bad performance
+* __`imagery_config`__ - URL to a JSON file with a custom imageryData array, see [https://github.com/osmearth/osmearth-configs]
+* __`presets_config`__ - URL to a JSON file with a custom preset values, see [https://github.com/osmearth/osmearth-configs]
+
 ##### iD on openstreetmap.org (Rails Port)
 
 When constructing a URL to an instance of iD embedded in the OpenStreetMap Rails
