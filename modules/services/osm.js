@@ -42,7 +42,8 @@ var oauth = osmAuth({
     oauth_consumer_key: 'dtxeA5csys0Nm7f0x0r0CjvQY6dBzycl0ZW8YuV0',
     oauth_secret: 'XomBRv0iLcNd4JSfkNIqZ42sZfWnSaTQG16bWpzr',
     loading: authLoading,
-    done: authDone
+    done: authDone,
+    landing: 'land'
 });
 
 var _blacklists = ['.*\.google(apis)?\..*/(vt|kh)[\?/].*([xyz]=.*){3}.*'];
